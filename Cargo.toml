@@ -1,0 +1,12 @@
+[package]
+name = "rcrawl"
+version = "0.1.0"
+authors = ["oglinuk"]
+edition = "2018"
+
+[dependencies]
+select = "0.4.2"
+toml = "*"
+serde = {version = "*", features = ["derive"]}
+url = "*"
+reqwest = "0.9.10"

@@ -1,0 +1,8 @@
+to_crawl = "to_crawl.txt"
+urls = [
+    "https://en.wikipedia.org/wiki/Chaos_theory"
+]
+
+[threads]
+max_workers = 4
+
