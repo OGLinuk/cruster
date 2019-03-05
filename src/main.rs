@@ -6,7 +6,6 @@ use crate::utils::urlwriter::UrlWriter;
 use crate::web::crawler::Crawler;
 use std::error::Error;
 use std::path::Path;
-//use std::fs::File;
 use url::Url;
 
 // Result replaces the return Result<(), Box<Error>> with just Result<T>
@@ -26,25 +25,27 @@ fn main() -> Result<()> {
         }
     };
 
-    // File to write urls to be added to cfg.urls
-    // Todo: Add aggregate function that walks root dir and reads/writes unique urls
-    // to the to_crawl file
-    //let to_crawl = File::create(&cfg.to_crawl);
+    
+    let mut raw_url_writer = UrlWriter::new(Path::new("raw"));
+    let mut parsed_url_writer = UrlWriter::new(Path::new("parsed"));
 
-    // Todo: change below to create a new crawler for each BaseUrl
-    // as well as implement thread pooling
-    let c = {
-        let url = Url::parse(&cfg.urls[0])?;
-        Crawler::new(url)
-    };
+    // Todo: implement thread pooling
+    for url in &cfg.urls {
+        let c = {
+            let to_crawl = Url::parse(url)?;
+            Crawler::new(to_crawl)
+        };
+        
+        let urls = c.crawl()?;
 
-    let urls = c.crawl()?;
+        parsed_url_writer.write(&c.base)?;
 
-    let mut url_writer = UrlWriter::new(Path::new("root"));
-
-    for url in urls {
-        url_writer.write(&url)?;
+        for url in urls {
+            raw_url_writer.write(&url)?;
+        }
     }
+
+    raw_url_writer.aggregate_roots()?;
 
     Ok(())
 }

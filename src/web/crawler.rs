@@ -5,7 +5,7 @@ use select::predicate::Name;
 use url::Url;
 
 pub struct Crawler {
-    base: Url,
+    pub base: Url,
 }
 
 impl Crawler {
@@ -13,9 +13,9 @@ impl Crawler {
         Crawler { base: url }
     }
 
-    // crawl sends a request to the Crawler.base url
+    // crawl sends a request to the Crawler.base
     // parses the response
-    // finds <a> tags containing hrefs
+    // finds <a> tags containing hrefs attributes
     // maps the hrefs to the base url
     // transforms the resulting iterator to <Vec<Url>>
     pub fn crawl(&self) -> Result<Vec<Url>> {
