@@ -6,6 +6,7 @@ use std::io::prelude::*;
 use std::io::BufReader;
 use std::path::{Path, PathBuf};
 use url::Url;
+use urlencoding::decode;
 
 pub struct UrlWriter {
     pub path: PathBuf,
@@ -37,7 +38,8 @@ impl UrlWriter {
 
     // write joins the host domain and path to make a file path
     // checks if the path is an existing file, if not it creates a new file
-    // writes the given url to the file and marks has_written bool as true
+    // checks if the url contains %(s), if so decode it
+    // writes the url to corresponding file and marks has_written bool as true
     pub fn write(&mut self, url: &Url) -> Result<()> {
         let base = url.host_str().unwrap_or("no host").to_string();
         let file_dir = self.path.join(&base);
@@ -47,7 +49,14 @@ impl UrlWriter {
             .entry(base.to_owned())
             .or_insert_with(|| UrlFile::new(&file_dir));
 
-        writeln!(url_file.file, "{}", url.as_str())?;
+        let str_url = url.as_str();
+        if str_url.contains("%") {
+            let decoded_url = decode(&str_url);
+            writeln!(url_file.file, "{}", decoded_url.unwrap())?;
+        } else {
+            writeln!(url_file.file, "{}", url.as_str())?;
+        }
+
         url_file.has_written = true;
         Ok(())
     }

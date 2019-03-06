@@ -19,7 +19,7 @@ impl Default for Config {
     fn default() -> Self {
         Config {
             urls: vec![
-                "https://en.wikipedia.org/wiki/Chaos_theory".into()
+                "https://en.wikipedia.org/wiki/Chaos_theory".into(),
                 "https://en.wikipedia.org/wiki/Parabola".into()
                 ],
             threads: ThreadOptions { max_workers: 4 },
