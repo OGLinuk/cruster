@@ -25,8 +25,9 @@ fn main() -> Result<()> {
         }
     };
 
+    let raw_path = Path::new("raw");
     
-    let mut raw_url_writer = UrlWriter::new(Path::new("raw"));
+    let mut raw_url_writer = UrlWriter::new(raw_path);
     let mut parsed_url_writer = UrlWriter::new(Path::new("parsed"));
 
     // Todo: implement thread pooling

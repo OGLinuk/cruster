@@ -82,6 +82,7 @@ impl UrlWriter {
         let c = Config::new(vhset, 4);
         c.save(Path::new("config.toml"))?;
 
+        fs::remove_dir_all(self.path)?;
         Ok(())
     }
 }
