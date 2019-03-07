@@ -3,7 +3,6 @@ use reqwest;
 use reqwest::header::CONTENT_TYPE;
 use select::document::Document;
 use select::predicate::Name;
-//use std::fs::File;
 use url::Url;
 
 pub struct Crawler {
@@ -15,9 +14,9 @@ impl Crawler {
         Crawler { base: url }
     }
 
-    // crawl sends a request to the Crawler.base
+    // crawl sends request to Crawler.base
     // parses the response, checks header content_type
-    // finds <a> tags containing hrefs attributes
+    // finds <a> tags containing hrefs attributes (if text/html)
     // maps the hrefs to the base url
     // transforms the resulting iterator to <Vec<Url>>
     pub fn crawl(&self) -> Result<Vec<Url>> {

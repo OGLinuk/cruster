@@ -44,6 +44,8 @@ impl UrlWriter {
         let base = url.host_str().unwrap_or("no host").to_string();
         let file_dir = self.path.join(&base);
         
+        // Todo use https://doc.rust-lang.org/std/io/struct.BufWriter.html instead
+        // of just writeln! ~ see which way is faster (macro or BufWriter)
         let mut url_file = self
             .url_files
             .entry(base.to_owned())
@@ -64,13 +66,14 @@ impl UrlWriter {
     // aggregate_roots loops over url_files and joins k to self.path to make a file path
     // then it loops over the lines in the resulting file and inserts into hset
     // then it loops over the strings in hset and pushes the values into vhset
-    // Config::new is called, passing the Vec of urls and finally save is called
+    // Config::new is called, passing the Vec of urls, save is called, then removes uncrawled
     pub fn aggregate_roots(self) -> Result<()> {
         let mut vhset = Vec::new();
         for (k, _v) in self.url_files.iter() {
             let file_dir = self.path.join(k);
             let mut hset = HashSet::new();
             let file = File::open(file_dir)?;
+
             for line in BufReader::new(file).lines() {
                 hset.insert(line?);
             }
