@@ -3,6 +3,9 @@ use reqwest;
 use reqwest::header::CONTENT_TYPE;
 use select::document::Document;
 use select::predicate::Name;
+use std::fs::File;
+use std::io::Write;
+use std::path::Path;
 use url::Url;
 
 pub struct Crawler {
@@ -20,8 +23,11 @@ impl Crawler {
     // maps the hrefs to the base url
     // transforms the resulting iterator to <Vec<Url>>
     pub fn crawl(&self) -> Result<Vec<Url>> {
+        if self.base.as_str().contains("facebook") || self.base.as_str().contains("instagram") {
+            ()
+        }
         println!("Fetching: {}", self.base.as_str());
-        let resp = reqwest::get(self.base.as_str())?;
+        let mut resp = reqwest::get(self.base.as_str())?;
         let c_type =  resp.headers().get(CONTENT_TYPE)
                                     .and_then(|h| Some(h.to_str()))
                                     .unwrap_or(Ok(""))?;
@@ -31,6 +37,17 @@ impl Crawler {
             let full_urls = hrefs.map(|url| self.base.join(url).expect("failed to join url"));
             Ok(full_urls.collect::<Vec<Url>>())
         } else {
+            // Still working on below chunk 
+            /*
+            // Ran into no method found error
+            // solution found here ~ https://stackoverflow.com/a/40392936
+            let mut non_html = File::open(Path::new("non-html.txt")).expect("could not open file");
+            let mut buf: Vec<u8> = vec![];
+            resp.copy_to(&mut buf)?;
+            //non_html.write(&buf)?;
+
+            writeln!(non_html, "{:?}", &buf)?;
+            */
             Ok(Default::default())
         }
     }

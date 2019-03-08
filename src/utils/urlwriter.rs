@@ -56,7 +56,7 @@ impl UrlWriter {
             let decoded_url = decode(&str_url);
             writeln!(url_file.file, "{}", decoded_url.unwrap())?;
         } else {
-            writeln!(url_file.file, "{}", url.as_str())?;
+            writeln!(url_file.file, "{}", str_url)?;
         }
 
         url_file.has_written = true;

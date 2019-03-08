@@ -1,6 +1,6 @@
 urls = [
-    "https://en.wikipedia.org/wiki/Chaos_theory",
-    "https://en.wikipedia.org/wiki/Parabola"
+    'https://en.wikipedia.org/wiki/Chaos_theory',
+    'https://en.wikipedia.org/wiki/Parabola',
 ]
 
 [threads]
