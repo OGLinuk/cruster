@@ -13,15 +13,17 @@ use url::Url;
 // Result replaces the return Result<(), Box<Error>> with just Result<T>
 type Result<T> = std::result::Result<T, Box<Error>>;
 
-// Checks if config.toml exists, if it does set cfg to the value
-// if not it sets the default() and creates a config.toml file
-// loops through urls, creates a Crawler, extracts urls from crawled
-// writes crawled to parsed and every uncrawled to raw
+// main checks if config.toml exists, if it does set cfg to the value
+// if not it sets the default() and creates a config.toml file.
+// Loops through urls, creates a Crawler, writes parsed url to crawled
+// and sends the returned value from crawl to the tx channel.
+// All urls on the rx channel are looped through and written to uncrawled
+// and finally aggregate_roots is called
 fn main() -> Result<()> {
     let cfg = {
         let cfg_path = Path::new("config.toml");
         if cfg_path.exists() {
-            Config::load(&cfun_c_typeg_path)?
+            Config::load(&cfg_path)?
         } else {
             let c = Config::default();
             c.save(&cfg_path)?;
