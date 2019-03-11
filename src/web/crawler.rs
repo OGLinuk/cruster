@@ -20,18 +20,21 @@ impl Crawler {
     // maps the hrefs to the base url
     // transforms the resulting iterator to <Vec<Url>>
     pub fn crawl(&self) -> Vec<Url> {
-        let resp = reqwest::get(self.base.as_str());
+        if !Url::parse(self.base.as_str()).is_ok() {
+            println!("Defaulted: {}", self.base.as_str());
+            Default::default()
+        };
+        let resp = reqwest::get(self.base.as_str()).expect("could not set get req");
         let c_type =  resp.headers().get(CONTENT_TYPE)
-                                    .and_then(|h| Some(h.to_str())).into();
+                                    .and_then(|h| Some(h.to_str()))
+                                    .expect("could not get cont_type");
 
-        // Todo: find a better way to check below
-        println!("{}", c_type);
-        if c_type.contains("text/html;charset=UTF-8") ||
-            c_type.contains("text/html;charset=utf-8") ||
-             c_type.contains("text/html; charset=UTF-8") ||
-             c_type.contains("text/html; charset=utf-8"){        
+        let un_c_type = c_type.expect("could not c_type");
+
+        println!("{:?}", un_c_type);
+        if un_c_type.contains("text/html"){        
             println!("Fetching: {}", self.base.as_str());
-            let doc = Document::from_read(resp);
+            let doc = Document::from_read(resp).expect("could not read resp");
             let hrefs = doc.find(Name("a")).filter_map(|n| n.attr("href"));
             let full_urls = hrefs.map(|url| self.base.join(url).expect("failed to join url"));
             full_urls.collect::<Vec<Url>>()

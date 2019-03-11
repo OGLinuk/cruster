@@ -40,27 +40,27 @@ impl UrlWriter {
     // checks if the path is an existing file, if not it creates a new file
     // checks if the url contains %(s), if so decode it
     // writes the url to corresponding file and marks has_written bool as true
-    pub fn write(&mut self, url: &Url) -> Result<()> {
+    pub fn write(&mut self, url: &Url) {
         let base = url.host_str().unwrap_or("no host").to_string();
         let file_dir = self.path.join(&base);
         
         // Todo use https://doc.rust-lang.org/std/io/struct.BufWriter.html instead
         // of just writeln! ~ see which way is faster (macro or BufWriter)
         let mut url_file = self
-            .url_files
-            .entry(base.to_owned())
-            .or_insert_with(|| UrlFile::new(&file_dir));
+            .url_files // referencing the UrlWriters HashMap
+            .entry(base.to_owned()) // getting a value from the HashMap
+            .or_insert_with(|| UrlFile::new(&file_dir)); // if a value is not found 
+                                                         // set it to file_dir
 
         let str_url = url.as_str();
         if str_url.contains("%") {
             let decoded_url = decode(&str_url);
-            writeln!(url_file.file, "{}", decoded_url.unwrap())?;
+            writeln!(url_file.file, "{}", decoded_url.unwrap()).expect("could not write");
         } else {
-            writeln!(url_file.file, "{}", str_url)?;
+            writeln!(url_file.file, "{}", str_url).expect("could not write str_url");
         }
 
         url_file.has_written = true;
-        Ok(())
     }
 
     // aggregate_roots loops over url_files and joins k to self.path to make a file path
@@ -74,12 +74,15 @@ impl UrlWriter {
             let mut hset = HashSet::new();
             let file = File::open(file_dir)?;
 
+            // Todo: work on implementing below    
+            //BufReader::new(file).lines().map(|l| l).collect::<HashSet<String>>();
+
             for line in BufReader::new(file).lines() {
                 hset.insert(line?);
             }
-            for v in hset {
-                vhset.push(v);
-            }
+        
+            hset.iter().for_each(|v| vhset.push(v.to_owned())); // loops through each entry in 
+                                                                // hset and pushes entry to vhset
         }
 
         let c = Config::new(vhset, 4);

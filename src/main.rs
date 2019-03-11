@@ -21,7 +21,7 @@ fn main() -> Result<()> {
     let cfg = {
         let cfg_path = Path::new("config.toml");
         if cfg_path.exists() {
-            Config::load(&cfg_path)?
+            Config::load(&cfun_c_typeg_path)?
         } else {
             let c = Config::default();
             c.save(&cfg_path)?;
@@ -34,30 +34,33 @@ fn main() -> Result<()> {
     let mut raw_url_writer = UrlWriter::new(raw_path);
     let mut parsed_url_writer = UrlWriter::new(Path::new("crawled"));
 
+    /* Threadpooling implementation via threadpool::ThreadPool */
     let n_workers = cfg.threads.max_workers;
     let n_jobs = cfg.urls.len();
     let pool = ThreadPool::new(n_workers);
     let (tx, rx) = channel();
 
     for url in &cfg.urls {
-        let urls = {
-            let to_crawl = Url::parse(url)?;
-            let tx = tx.clone();
-            let c = Crawler::new(to_crawl);
-            parsed_url_writer.write(&c.base);
+        let to_crawl = Url::parse(url)?;
+        let tx = tx.clone();
+        let c = Crawler::new(to_crawl);
+        parsed_url_writer.write(&c.base);
 
-            pool.execute(move|| {
-                tx.send(c.crawl()).expect("could crawl new crawler");
-           });
-        };
-
-        /*
-        for uri in urls {
-            raw_url_writer.write(&uri)?;
-        }
-        */
+        pool.execute(move|| {
+            tx.send(c.crawl()).unwrap_or_default();
+        });
     }
+    
+    // Niamh line of code that *could* replace 5 lines of code below but is not as easily read
+    //rx.iter().take(n_jobs).for_each(|r| r.iter().for_each(|x| raw_url_writer.write(x)));
+    for r in rx.iter().take(n_jobs) {
+        for x in r {
+            raw_url_writer.write(&x);
+        }
+    }
+    /* End of threadpooling */
 
+    // urlwriter::UrlWriter.aggregate_roots()
     raw_url_writer.aggregate_roots()?;
 
     Ok(())
