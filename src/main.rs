@@ -6,6 +6,8 @@ use crate::utils::urlwriter::UrlWriter;
 use crate::web::crawler::Crawler;
 use std::error::Error;
 use std::path::Path;
+use std::sync::mpsc::channel;
+use threadpool::ThreadPool;
 use url::Url;
 
 // Result replaces the return Result<(), Box<Error>> with just Result<T>
@@ -32,20 +34,28 @@ fn main() -> Result<()> {
     let mut raw_url_writer = UrlWriter::new(raw_path);
     let mut parsed_url_writer = UrlWriter::new(Path::new("crawled"));
 
-    // Todo: implement thread pooling
+    let n_workers = cfg.threads.max_workers;
+    let n_jobs = cfg.urls.len();
+    let pool = ThreadPool::new(n_workers);
+    let (tx, rx) = channel();
+
     for url in &cfg.urls {
-        let c = {
+        let urls = {
             let to_crawl = Url::parse(url)?;
-            Crawler::new(to_crawl)
+            let tx = tx.clone();
+            let c = Crawler::new(to_crawl);
+            parsed_url_writer.write(&c.base);
+
+            pool.execute(move|| {
+                tx.send(c.crawl()).expect("could crawl new crawler");
+           });
         };
-        
-        let urls = c.crawl()?;
 
-        parsed_url_writer.write(&c.base)?;
-
+        /*
         for uri in urls {
             raw_url_writer.write(&uri)?;
         }
+        */
     }
 
     raw_url_writer.aggregate_roots()?;

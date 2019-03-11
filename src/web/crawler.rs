@@ -1,4 +1,4 @@
-use crate::Result;
+//use crate::Result;
 use reqwest;
 use reqwest::header::CONTENT_TYPE;
 use select::document::Document;
@@ -19,11 +19,10 @@ impl Crawler {
     // finds <a> tags containing hrefs attributes (if text/html)
     // maps the hrefs to the base url
     // transforms the resulting iterator to <Vec<Url>>
-    pub fn crawl(&self) -> Result<Vec<Url>> {
-        let mut resp = reqwest::get(self.base.as_str())?;
+    pub fn crawl(&self) -> Vec<Url> {
+        let resp = reqwest::get(self.base.as_str());
         let c_type =  resp.headers().get(CONTENT_TYPE)
-                                    .and_then(|h| Some(h.to_str()))
-                                    .unwrap_or(Ok(""))?;
+                                    .and_then(|h| Some(h.to_str())).into();
 
         // Todo: find a better way to check below
         println!("{}", c_type);
@@ -32,10 +31,10 @@ impl Crawler {
              c_type.contains("text/html; charset=UTF-8") ||
              c_type.contains("text/html; charset=utf-8"){        
             println!("Fetching: {}", self.base.as_str());
-            let doc = Document::from_read(resp)?;
+            let doc = Document::from_read(resp);
             let hrefs = doc.find(Name("a")).filter_map(|n| n.attr("href"));
             let full_urls = hrefs.map(|url| self.base.join(url).expect("failed to join url"));
-            Ok(full_urls.collect::<Vec<Url>>())
+            full_urls.collect::<Vec<Url>>()
         } else {
             // Still working on below chunk 
             /*
@@ -48,7 +47,7 @@ impl Crawler {
 
             writeln!(non_html, "{:?}", &buf)?;
             */
-            Ok(Default::default())
+            Default::default()
         }
     }
 }
