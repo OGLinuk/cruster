@@ -3,9 +3,6 @@ use reqwest;
 use reqwest::header::CONTENT_TYPE;
 use select::document::Document;
 use select::predicate::Name;
-use std::fs::File;
-use std::io::Write;
-use std::path::Path;
 use url::Url;
 
 pub struct Crawler {
@@ -23,15 +20,18 @@ impl Crawler {
     // maps the hrefs to the base url
     // transforms the resulting iterator to <Vec<Url>>
     pub fn crawl(&self) -> Result<Vec<Url>> {
-        if self.base.as_str().contains("facebook") || self.base.as_str().contains("instagram") {
-            ()
-        }
-        println!("Fetching: {}", self.base.as_str());
         let mut resp = reqwest::get(self.base.as_str())?;
         let c_type =  resp.headers().get(CONTENT_TYPE)
                                     .and_then(|h| Some(h.to_str()))
                                     .unwrap_or(Ok(""))?;
-        if c_type.contains("text/html") {
+
+        // Todo: find a better way to check below
+        println!("{}", c_type);
+        if c_type.contains("text/html;charset=UTF-8") ||
+            c_type.contains("text/html;charset=utf-8") ||
+             c_type.contains("text/html; charset=UTF-8") ||
+             c_type.contains("text/html; charset=utf-8"){        
+            println!("Fetching: {}", self.base.as_str());
             let doc = Document::from_read(resp)?;
             let hrefs = doc.find(Name("a")).filter_map(|n| n.attr("href"));
             let full_urls = hrefs.map(|url| self.base.join(url).expect("failed to join url"));
