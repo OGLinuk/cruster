@@ -24,11 +24,15 @@ impl Crawler {
     // maps the found hrefs to the base url
     // transforms/returns the resulting iterator to <Vec<Url>>
     pub fn crawl(&self) -> Vec<Url> {
-        if !Url::parse(self.base.as_str()).is_ok() {
-            println!("Defaulted: {}", self.base.as_str());
+        let str_base = self.base.as_str();
+
+        let resp = reqwest::get(str_base).expect("could not set get req");
+        if !resp.status().is_success() {
+            // Todo: re-add this to the uncrawled or implement functionality
+            // to write to various status code files (make urlwriter::write?)
             Default::default()
-        };
-        let resp = reqwest::get(self.base.as_str()).expect("could not set get req");
+        }
+
         let c_type = resp
             .headers()
             .get(CONTENT_TYPE)
