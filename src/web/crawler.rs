@@ -1,4 +1,4 @@
-//use crate::Result;
+use crate::Result;
 use reqwest;
 use reqwest::header::CONTENT_TYPE;
 use select::document::Document;
@@ -14,9 +14,13 @@ impl Crawler {
         Crawler { base: url }
     }
 
+    pub fn from_url_string(str_url: &str) -> Result<Crawler> {
+        Ok(Crawler::new(Url::parse(str_url)?))
+    }
+
     // crawl sends request to Crawler.base url
     // parses the response, checks header content_type
-    // finds <a> tags containing hrefs attributes (if text/html) else defaults
+    // finds <a> tags containing hrefs attributes (if utf-8) else defaults
     // maps the found hrefs to the base url
     // transforms/returns the resulting iterator to <Vec<Url>>
     pub fn crawl(&self) -> Vec<Url> {
@@ -25,13 +29,15 @@ impl Crawler {
             Default::default()
         };
         let resp = reqwest::get(self.base.as_str()).expect("could not set get req");
-        let c_type =  resp.headers().get(CONTENT_TYPE)
-                                    .and_then(|h| Some(h.to_str()))
-                                    .expect("could not get cont_type")
-                                    .expect("could not expect c_type");
+        let c_type = resp
+            .headers()
+            .get(CONTENT_TYPE)
+            .and_then(|h| Some(h.to_str()))
+            .expect("could not get cont_type")
+            .expect("could not expect c_type");
 
-        println!("{:?}", c_type);
-        if c_type.contains("text/html"){        
+        println!("{:?}", c_type.to_lowercase());
+        if c_type.to_lowercase().contains("utf-8") {
             println!("Fetching: {}", self.base.as_str());
             let doc = Document::from_read(resp).expect("could not read resp");
             let hrefs = doc.find(Name("a")).filter_map(|n| n.attr("href"));
