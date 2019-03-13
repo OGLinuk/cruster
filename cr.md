@@ -38,6 +38,15 @@ for r in rx.iter().take(n_jobs).flatten() {
 }
 ```
 
+which I refactored to
+
+```Rust
+rec_chan.iter()
+        .take(n_jobs)
+        .flatten()
+        .for_each(|x| raw_url_writer.write(&x));
+```
+
 ##### Notes
 
 Apply [```.flatten()```](https://doc.rust-lang.org/std/iter/trait.Iterator.html#method.flatten) to the iterator, which flattens nested structure, removing the need for a second for loop.
