@@ -75,27 +75,6 @@ impl UrlWriter {
                 .filter(|l| uniques.insert(l.to_owned()));
 
             base_urls.extend(unique_lines);
-
-            /*
-            Replaced below code with unique_lines above (third iteration) ~ code review with
-            [Bahnahnah](https://github.com/Bahnahnah)
-            "if you can assign something to a name, you dont /have/ to read the code
-            unique_lines obv stores the unique lines of that file so dont have to read past that" ~ Bahnahnah
-
-            Niamh line of code to replace the 4 lines of code below (second iteration)
-            for line in BufReader::new(file).lines().map(|l| l.unwrap()).filter(|l| hset.insert(l.to_owned())) {
-                vhset.push(line);
-            }
-
-            //First iteration
-            for line in BufReader::new(file).lines() {
-                hset.insert(line?);
-            }
-            hset.into_iter().for_each(|v| vhset.push(v.to_owned()));
-
-            (the above) "isnt self explanitory and requires a lot of context
-                            to understand whats trying to happen" ~ Bahnahnah
-            */
         }
 
         Config::new(base_urls, 4).save("config.toml")?;

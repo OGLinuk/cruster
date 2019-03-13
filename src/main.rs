@@ -40,14 +40,13 @@ fn try_main() -> Result<()> {
     let mut raw_url_writer = UrlWriter::new(Path::new("uncrawled"));
     let mut parsed_url_writer = UrlWriter::new(Path::new("crawled"));
 
-    /* Threadpooling implementation via threadpool::ThreadPool */
     let n_workers = cfg.threads.max_workers;
     let n_jobs = cfg.urls.len();
     let pool = ThreadPool::new(n_workers);
-    let (tx, rx) = channel();
+    let (tr_chan, rec_chan) = channel();
 
     for url in &cfg.urls {
-        let tx = tx.clone();
+        let tx = tr_chan.clone();
         let c = Crawler::from_url_string(&url)?;
         parsed_url_writer.write(&c.base);
 
@@ -56,28 +55,11 @@ fn try_main() -> Result<()> {
         });
     }
 
-    /*
-    First iteration
-    for r in rx.iter().take(n_jobs) {
-        for x in r {
-            raw_url_writer.write(&x);
-        }
-    }
+    rec_chan.iter()
+            .take(n_jobs)
+            .flatten()
+            .for_each(|x| raw_url_writer.write(&x));
 
-    Second iteration, but was never used ~ only serves as an example of a bad code smell
-    Niamh line of code that *could* replace 5 lines of code above but is not as easily read
-    rx.iter().take(n_jobs).for_each(|r| r.iter().for_each(|x| raw_url_writer.write(x)));
-
-    above 5 and 1 line code chunks replaced with 3 lines below ~ code review with [Bahnahnah](https://github.com/Bahnahnah)
-    .flatten() creates an iterator that flattens nested structure, removing the need for the second loop
-    */
-
-    for r in rx.iter().take(n_jobs).flatten() {
-        raw_url_writer.write(&r);
-    }
-    /* End of threadpooling */
-
-    // urlwriter::UrlWriter.aggregate_roots()
     raw_url_writer.aggregate_roots()?;
 
     Ok(())
