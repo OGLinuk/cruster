@@ -26,30 +26,28 @@ impl Crawler {
     pub fn crawl(&self) -> Vec<Url> {
         let str_base = self.base.as_str();
 
-        let resp = reqwest::get(str_base).expect("could not set get req");
-        if !resp.status().is_success() {
-            // Todo: re-add this to the uncrawled or implement functionality
-            // to write to various status code files (make urlwriter::write?)
-            Default::default()
-        }
+        if let Ok(resp) = reqwest::get(str_base) {
+            let c_type = resp
+                .headers()
+                .get(CONTENT_TYPE)
+                .and_then(|h| Some(h.to_str()))
+                .expect("could not get cont_type")
+                .expect("could not expect c_type");
 
-        let c_type = resp
-            .headers()
-            .get(CONTENT_TYPE)
-            .and_then(|h| Some(h.to_str()))
-            .expect("could not get cont_type")
-            .expect("could not expect c_type");
-
-        println!("{:?}", c_type.to_lowercase());
-        if c_type.to_lowercase().contains("utf-8") {
-            println!("Fetching: {}", self.base.as_str());
-            let doc = Document::from_read(resp).expect("could not read resp");
-            let hrefs = doc.find(Name("a")).filter_map(|n| n.attr("href"));
-            let full_urls = hrefs.map(|url| self.base.join(url).expect("failed to join url"));
-            full_urls.collect::<Vec<Url>>()
+            println!("{:?}", c_type.to_lowercase());
+            if c_type.to_lowercase().contains("utf-8") {
+                println!("Fetching: {}", self.base.as_str());
+                let doc = Document::from_read(resp).expect("could not read resp");
+                let hrefs = doc.find(Name("a")).filter_map(|n| n.attr("href"));
+                let full_urls = hrefs.map(|url| self.base.join(&url).expect("could not join url"));
+                full_urls.collect::<Vec<Url>>()
+            } else {
+                // Todo: implement functionality to download/save content that is not text/html
+                Default::default()
+            }
         } else {
-            // Todo: implement functionality to download/save content that is not text/html
             Default::default()
         }
     }
 }
+

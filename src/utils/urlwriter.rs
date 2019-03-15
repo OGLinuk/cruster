@@ -51,7 +51,7 @@ impl UrlWriter {
             .or_insert_with(|| UrlFile::new(&file_dir)); // if a value is not found
                                                          // set it to file_dir
 
-        let decoded_url = decode(url.as_str()).expect("failed to decode");
+        let decoded_url = decode(url.as_str()).unwrap_or_default();
         writeln!(url_file.file, "{}", decoded_url).expect("could not write");
 
         url_file.has_written = true;
