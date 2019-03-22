@@ -25,7 +25,6 @@ impl Crawler {
     // transforms/returns the resulting iterator to <Vec<Url>>
     pub fn crawl(&self) -> Vec<Url> {
         let str_base = self.base.as_str();
-
         if let Ok(resp) = reqwest::get(str_base) {
             let c_type = resp
                 .headers()
@@ -34,12 +33,11 @@ impl Crawler {
                 .expect("could not get cont_type")
                 .expect("could not expect c_type");
 
-            println!("{:?}", c_type.to_lowercase());
             if c_type.to_lowercase().contains("utf-8") {
                 println!("Fetching: {}", self.base.as_str());
                 let doc = Document::from_read(resp).expect("could not read resp");
                 let hrefs = doc.find(Name("a")).filter_map(|n| n.attr("href"));
-                let full_urls = hrefs.map(|url| self.base.join(&url).expect("could not join url"));
+                let full_urls = hrefs.filter_map(|url| self.base.join(&url).ok());
                 full_urls.collect::<Vec<Url>>()
             } else {
                 // Todo: implement functionality to download/save content that is not text/html

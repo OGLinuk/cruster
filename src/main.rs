@@ -49,7 +49,7 @@ fn try_main() -> Result<()> {
         let tx = tr_chan.clone();
         let c = Crawler::from_url_string(&url)?;
         parsed_url_writer.write(&c.base);
-
+        
         pool.execute(move || {
             tx.send(c.crawl()).unwrap_or_default();
         });
