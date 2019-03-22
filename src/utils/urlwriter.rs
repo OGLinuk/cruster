@@ -4,6 +4,7 @@ use std::fs;
 use std::fs::File;
 use std::io::prelude::*;
 use std::io::BufReader;
+use std::string::String;
 use std::path::{Path, PathBuf};
 use url::Url;
 use urlencoding::decode;
@@ -52,6 +53,7 @@ impl UrlWriter {
                                                          // set it to file_dir
 
         let decoded_url = decode(url.as_str()).unwrap_or_default();
+
         writeln!(url_file.file, "{}", decoded_url).expect("could not write");
 
         url_file.has_written = true;

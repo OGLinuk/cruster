@@ -23,7 +23,7 @@ fn main() {
 // if not it sets the default() and creates a config.toml file.
 // Loops through urls, creates a Crawler, writes parsed url to crawled
 // and sends the returned value from crawl to the tx channel.
-// All urls on the rx channel are looped through and written to uncrawled
+// All urls on the rx channel are iterated over and written to uncrawled
 // and finally aggregate_roots is called
 fn try_main() -> Result<()> {
     let cfg = {
@@ -44,15 +44,16 @@ fn try_main() -> Result<()> {
     let n_jobs = cfg.urls.len();
     let pool = ThreadPool::new(n_workers);
     let (tr_chan, rec_chan) = channel();
+    let mut iters = 0;
 
     for url in &cfg.urls {
         let tx = tr_chan.clone();
         let c = Crawler::from_url_string(&url)?;
         parsed_url_writer.write(&c.base);
-        
         pool.execute(move || {
-            tx.send(c.crawl()).unwrap_or_default();
+            tx.send(c.crawl(iters)).unwrap_or_default();
         });
+        iters = iters + 1;
     }
 
     rec_chan.iter()
