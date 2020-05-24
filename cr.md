@@ -1,12 +1,10 @@
 # Code Review ~ 0
 
-## Reviewer: [Bahnahnah](https://github.com/Bahnahnah)
+## Reviewer: [Pigeonhands](https://github.com/Pigeonhands)
 
 ## Reviewee: [OGLinuk](https://github.com/OGLinuk)
 
-## Branch reviewed: [dev-threadpooling](https://github.com/OGLinuk/cruster/tree/dev-threadpooling)
-
-### Reason for branch
+### Problem
 
 The ***problem*** encountered when the number of urls to crawl increases exponentially, the length of execution for the program increased exponentially. For example any 2 base urls could yield 100+ links *each*. Those 200 could produce 10000+ each, and so on. The current state of cruster loops through each base url found in config.toml and calls the crawl method. This means that the more urls the longer it will take and bottleneck when only crawling one url at a time. 
 
@@ -16,7 +14,7 @@ To solve this problem Bahnahnah suggested implementing the [threadpooling](https
 
 ## Implementation notes
 
-<hr>
+---
 
 ## [main.rs](https://github.com/OGLinuk/cruster/commit/8d069d37573a91e7132726b62cbf8cd45668ae7d#diff-639fbc4ef05b315af92b4d836c31b023)
 
@@ -42,9 +40,9 @@ which I refactored to
 
 ```Rust
 rec_chan.iter()
-        .take(n_jobs)
-        .flatten()
-        .for_each(|x| raw_url_writer.write(&x));
+    .take(n_jobs)
+    .flatten()
+    .for_each(|x| raw_url_writer.write(&x));
 ```
 
 ##### Notes
@@ -76,7 +74,7 @@ writeln!(url_file.file, "{}", decoded_url)
 
 Decode the url regardless, no point in checking for %.
 
-<hr>
+---
 
 ## [urlwriter.rs](https://github.com/OGLinuk/cruster/commit/8d069d37573a91e7132726b62cbf8cd45668ae7d#diff-7dfe6878c2535abd225f41aaa8fdc7e1)
 
@@ -105,7 +103,7 @@ base_urls.extend(unique_lines);
 
 Utilizing [```.lines()```](https://doc.rust-lang.org/std/io/trait.BufRead.html#method.lines)[```.map()```](https://doc.rust-lang.org/std/iter/struct.Map.html)[```.filter()```](https://doc.rust-lang.org/std/iter/trait.Iterator.html#method.filter) to replace the need for 2 loops. The second loop is replaced by the ```.map()``` method which maps ```l``` to the [```.unwrap()```](https://doc.rust-lang.org/std/option/enum.Option.html#method.unwrap) returned value, then ```.filter()``` the returned value of ```.insert()``` using ```l```. If the value is unique (returned true) the value will added be to the unique_lines value. 
 
-<hr>
+---
 
 ## [crawler.rs](https://github.com/OGLinuk/cruster/commit/8d069d37573a91e7132726b62cbf8cd45668ae7d#diff-28330c24e8d3f654df8e3c5a6df2e4b0)
 
@@ -134,9 +132,9 @@ let c = Crawler::from_url_string(&url)?;
 
 Added ```from_url_string()``` to eliminate the need to parse the value of url before passing to ```Crawler::new()```.
 
-<hr>
+---
 
-## [config.rs]()
+## [config.rs](https://github.com/OGLinuk/cruster/blob/master/src/utils/config.rs)
 
 ```Rust
 pub fn load(f: &Path) -> Result<Config> { 

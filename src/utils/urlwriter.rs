@@ -1,7 +1,7 @@
 use crate::{Config, Result};
 use std::collections::{HashMap, HashSet};
 use std::fs;
-use std::fs::File;
+use std::fs::{File, OpenOptions};
 use std::io::prelude::*;
 use std::io::BufReader;
 use std::string::String;
@@ -11,21 +11,7 @@ use urlencoding::decode;
 
 pub struct UrlWriter {
     pub path: PathBuf,
-    url_files: HashMap<String, UrlFile>,
-}
-
-pub struct UrlFile {
-    file: File,
-    has_written: bool,
-}
-
-impl UrlFile {
-    pub fn new(f: &Path) -> Self {
-        UrlFile {
-            file: File::create(f).expect("could not create file"),
-            has_written: false,
-        }
-    }
+    url_files: HashMap<String, String>,
 }
 
 impl UrlWriter {
@@ -44,19 +30,20 @@ impl UrlWriter {
     pub fn write(&mut self, url: &Url) {
         // Todo: try to find a better way of doing the below 2 lines of code
         let base = url.host_str().unwrap_or("no host").to_string();
-        let file_dir = self.path.join(&base);
-
-        let mut url_file = self
-            .url_files // referencing the UrlWriters HashMap
-            .entry(base.to_owned()) // getting a value from the HashMap
-            .or_insert_with(|| UrlFile::new(&file_dir)); // if a value is not found
-                                                         // set it to file_dir
+        let file_dir = String::from(self.path.join(&base)
+            .to_str()
+            .expect("file_dir String::from failed"));
 
         let decoded_url = decode(url.as_str()).unwrap_or_default();
 
-        writeln!(url_file.file, "{}", decoded_url).expect("could not write");
+        let mut file = OpenOptions::new()
+            .create(true)
+            .append(true)
+            .write(true)
+            .open(&file_dir)
+            .expect("file OpenOptions::new failed");
 
-        url_file.has_written = true;
+        writeln!(file, "{}", decoded_url).expect("could not write");
     }
 
     // aggregate_roots loops over url_files and joins k to self.path to make a file path

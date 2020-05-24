@@ -57,9 +57,9 @@ fn try_main() -> Result<()> {
     }
 
     rec_chan.iter()
-            .take(n_jobs)
-            .flatten()
-            .for_each(|x| raw_url_writer.write(&x));
+        .take(n_jobs)
+        .flatten()
+        .for_each(|x| raw_url_writer.write(&x));
 
     raw_url_writer.aggregate_roots()?;
 
