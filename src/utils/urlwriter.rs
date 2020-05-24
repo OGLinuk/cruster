@@ -26,7 +26,7 @@ impl UrlWriter {
     // write joins the host domain and path to make a file path
     // checks if the path is an existing file, if not it creates a new file
     // checks if the url contains %(s), if so decode it
-    // writes the url to corresponding file and marks has_written bool as true
+    // writes the url to corresponding file
     pub fn write(&mut self, url: &Url) {
         // Todo: try to find a better way of doing the below 2 lines of code
         let base = url.host_str().unwrap_or("no host").to_string();
@@ -34,13 +34,19 @@ impl UrlWriter {
             .to_str()
             .expect("file_dir String::from failed"));
 
+        let url_file = self
+            .url_files // referencing the UrlWriters HashMap
+            .entry(base.to_owned()) // getting a value from the HashMap
+            .or_insert_with(|| file_dir); // if a value is not found
+                                          // set it to file_dir
+
         let decoded_url = decode(url.as_str()).unwrap_or_default();
 
         let mut file = OpenOptions::new()
             .create(true)
             .append(true)
             .write(true)
-            .open(&file_dir)
+            .open(url_file)
             .expect("file OpenOptions::new failed");
 
         writeln!(file, "{}", decoded_url).expect("could not write");

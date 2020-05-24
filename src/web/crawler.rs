@@ -31,9 +31,10 @@ impl Crawler {
                 .get(CONTENT_TYPE)
                 .and_then(|h| Some(h.to_str()))
                 .expect("could not get cont_type")
-                .expect("could not expect c_type");
+                .expect("could not expect c_type")
+                .to_lowercase();
 
-            if c_type.to_lowercase().contains("utf-8") {
+            if c_type.contains("utf-8") || c_type.contains("text/html") {
                 println!("[{}] Fetching: {}", i, self.base.as_str());
                 let doc = Document::from_read(resp).expect("could not read resp");
                 let hrefs = doc.find(Name("a")).filter_map(|n| n.attr("href"));
