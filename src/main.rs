@@ -5,12 +5,13 @@ use crate::utils::config::Config;
 use crate::utils::urlwriter::UrlWriter;
 use crate::web::crawler::Crawler;
 use std::error::Error;
+use std::fs;
 use std::path::Path;
 use std::sync::mpsc::channel;
 use threadpool::ThreadPool;
 
-// Result replaces the return Result<(), Box<Error>> with just Result<T>
-type Result<T> = std::result::Result<T, Box<Error>>;
+// Result replaces the return Result<(), Box<dyn Error>> with just Result<T>
+type Result<T> = std::result::Result<T, Box<dyn Error>>;
 
 // main entrypoint to the program
 fn main() {
@@ -39,6 +40,7 @@ fn try_main() -> Result<()> {
 
     let mut raw_url_writer = UrlWriter::new(Path::new("uncrawled"));
     let mut parsed_url_writer = UrlWriter::new(Path::new("crawled"));
+    fs::create_dir_all("pdfs").expect("could not create pdfs dir");
 
     let n_workers = cfg.threads.max_workers;
     let n_jobs = cfg.urls.len();

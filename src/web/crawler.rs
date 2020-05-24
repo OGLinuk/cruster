@@ -3,6 +3,7 @@ use reqwest;
 use reqwest::header::CONTENT_TYPE;
 use select::document::Document;
 use select::predicate::Name;
+use std::process::Command;
 use url::Url;
 
 pub struct Crawler {
@@ -35,13 +36,33 @@ impl Crawler {
                 .to_lowercase();
 
             if c_type.contains("utf-8") || c_type.contains("text/html") {
-                println!("[{}] Fetching: {}", i, self.base.as_str());
+                println!("[{}] Fetching: {}", i, str_base);
                 let doc = Document::from_read(resp).expect("could not read resp");
                 let hrefs = doc.find(Name("a")).filter_map(|n| n.attr("href"));
                 let full_urls = hrefs.filter_map(|url| self.base.join(&url).ok());
                 full_urls.collect::<Vec<Url>>()
+            } else if c_type.contains("application/pdf") {
+                println!("[{}] Curling: {}", i, str_base);
+
+                let mut pdf_name = str_base.split("/")
+                    .last()
+                    .expect("could not get last value of split")
+                    .to_owned();
+
+                pdf_name.insert_str(0, "pdfs/");
+
+                let mut cmd = Command::new("curl");
+                cmd.arg("-L")
+                    .arg("--referer")
+                    .arg(";auto")
+                    .arg("-o")
+                    .arg(pdf_name)
+                    .arg(str_base)
+                    .output()
+                    .expect("could not curl");
+
+                Default::default()
             } else {
-                // Todo: implement functionality to download/save content that is not text/html
                 Default::default()
             }
         } else {
